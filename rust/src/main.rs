@@ -75,7 +75,7 @@ fn work_round(cur_round: u64, parameters: &Args) {
     );
 
     println!("Round {cur_round} work complete!");
-    if parameters.skip_input_break {
+    if !parameters.skip_input_break {
         wait_for_user_enter("Continue to next break?");
     }
 }
@@ -104,7 +104,7 @@ fn break_round(cur_round: u64, parameters: &Args) {
     );
 
     println!("Round {cur_round} break complete!");
-    if parameters.skip_input_break {
+    if !parameters.skip_input_break {
         wait_for_user_enter("Continue to next work round?");
     }
 }
@@ -143,8 +143,12 @@ fn wait_with_prog_bar(
         pb.inc(1);
 
         let start_time = SystemTime::now();
-
-        if second / 60 == (duration_min - warn_mins) && !no_warn && !warn_latch && !disable_sounds {
+        if duration_min > warn_mins
+            && second / 60 == duration_min - warn_mins
+            && !no_warn
+            && !warn_latch
+            && !disable_sounds
+        {
             beep_number_in_binary(WARNING_BEEP_NUM, Some(LONG_BEEP_MILLIS));
             warn_latch = true;
         }
