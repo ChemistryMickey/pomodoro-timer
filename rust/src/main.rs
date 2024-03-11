@@ -4,8 +4,9 @@ use rodio::{self, Source};
 use std::{thread, time::Duration, time::SystemTime};
 
 const WARNING_MINS: u64 = 5;
-const DEFAULT_BEEP_DURATION: u64 = 150;
-const WARNING_BEEP_NUM: u64 = 0b11011011;
+const DEFAULT_BEEP_MILLIS: u64 = 150;
+const LONG_BEEP_MILLIS: u64 = 300;
+const WARNING_BEEP_NUM: u64 = 0b1101;
 
 /// A nifty little CLI pomodoro timer with binary sounds and a progress bar
 #[derive(Parser, Debug)]
@@ -44,7 +45,7 @@ fn main() {
     let parameters: Args = Args::parse();
 
     if !parameters.skip_input_break {
-        wait_for_user_enter("Begin?");
+        wait_for_user_enter("Press Enter to Begin");
     }
     let mut cur_round: u64 = 1;
     loop {
@@ -144,15 +145,18 @@ fn wait_with_prog_bar(
         let start_time = SystemTime::now();
 
         if second / 60 == (duration_min - warn_mins) && !no_warn && !warn_latch && !disable_sounds {
-            beep_number_in_binary(WARNING_BEEP_NUM, None);
+            beep_number_in_binary(WARNING_BEEP_NUM, Some(LONG_BEEP_MILLIS));
             warn_latch = true;
         }
 
         let wait_millis = 1000
-            - SystemTime::now()
-                .duration_since(start_time)
-                .unwrap()
-                .as_millis();
+            - u64::min(
+                SystemTime::now()
+                    .duration_since(start_time)
+                    .unwrap()
+                    .as_millis() as u64,
+                1000,
+            );
         thread::sleep(Duration::from_millis(wait_millis as u64));
     }
     pb.finish();
@@ -168,7 +172,7 @@ fn beep_number_in_binary(num: u64, beep_duration_millis: Option<u64>) {
     let bin_form: String = format!("{:b}", num);
     let beep_duration_millis = match beep_duration_millis {
         Some(val) => val,
-        None => DEFAULT_BEEP_DURATION,
+        None => DEFAULT_BEEP_MILLIS,
     };
     let low_freq: f32 = 440.0; //A4
     let high_freq: f32 = 659.0; //E5
