@@ -57,10 +57,10 @@ fn main() {
 }
 
 fn work_round(cur_round: u64, parameters: &Args) {
-    println!(
-        "Starting round {}. Work for {} minutes!",
-        cur_round, parameters.work
-    );
+    // println!(
+    //     "Starting round {}. Work for {} minutes!",
+    //     cur_round, parameters.work
+    // );
 
     if !parameters.disable_all_sound {
         beep_number_in_binary(parameters.work, None);
@@ -71,7 +71,7 @@ fn work_round(cur_round: u64, parameters: &Args) {
         WARNING_MINS,
         parameters.no_warn,
         parameters.disable_all_sound,
-        "Work in Progress...",
+        format!("Work round {} in Progress...", cur_round).as_str(),
     );
 
     println!("Round {cur_round} work complete!");
@@ -83,24 +83,27 @@ fn work_round(cur_round: u64, parameters: &Args) {
 fn break_round(cur_round: u64, parameters: &Args) {
     let break_mins: u64;
     let break_warning_mins: u64;
+    let break_str: &str;
     if cur_round % parameters.rounds_before_long_break == 0 {
         break_mins = parameters.long_break;
         break_warning_mins = WARNING_MINS;
+        break_str = "Long Break in Progress...";
     } else {
         break_mins = parameters.short_break;
         break_warning_mins = 0;
+        break_str = "Short Break in Progress...";
     }
     if !parameters.disable_all_sound {
         beep_number_in_binary(break_mins, None);
     }
-    println!("Time for a {break_mins} minute break!");
+    // println!("Time for a {break_mins} minute break!");
 
     wait_with_prog_bar(
         break_mins,
         break_warning_mins,
         parameters.no_warn,
         parameters.disable_all_sound,
-        "Break in Progress...",
+        (format!("Round {} ", cur_round) + break_str).as_str(),
     );
 
     println!("Round {cur_round} break complete!");
