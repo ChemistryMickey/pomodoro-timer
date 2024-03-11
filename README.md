@@ -3,7 +3,7 @@ A nifty little CLI pomodoro timer to sharpen my rust against my python.
 
 ## Rust:
 ### Dependencies:
-See [./rust/Cargo.toml|Cargo TOML].
+See [Cargo.toml].
 
 ### Help Text:
 ```
@@ -68,7 +68,7 @@ Options:
 ############################################################
 
 Starting round 1. Work for 30 minutes!
-Work in Progress... ███████████████████████████████████████████████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ [11m/1800s] 
+Work in Progress... ███████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ [11m/1800s] 
 ```
 
 ## Python:
@@ -144,5 +144,5 @@ Examples:
 ############################################################
 
 Press enter to start.
-Round 1 work in progress...:   0%|                                                                                                                                                          | 0/30 [00:00<?, ?it/s]
+Round 1 work in progress...:   0%|                          | 0/30 [00:00<?, ?it/s]
 ```
