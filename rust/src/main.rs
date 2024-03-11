@@ -27,8 +27,8 @@ struct Args {
     rounds_before_long_break: u64,
 
     /// Produce a series of warning beeps 5 minutes before the work or long break is over
-    #[arg(short, long, default_value_t = true)]
-    warn: bool,
+    #[arg(short = 'n', long, default_value_t = false)]
+    no_warn: bool,
 
     /// Skip user input before continuing to the next round (continue without user input)
     #[arg(short = 'i', long, default_value_t = false)]
@@ -68,7 +68,7 @@ fn work_round(cur_round: u64, parameters: &Args) {
     wait_with_prog_bar(
         parameters.work,
         WARNING_MINS,
-        parameters.warn,
+        parameters.no_warn,
         parameters.disable_all_sound,
         "Work in Progress...",
     );
@@ -97,7 +97,7 @@ fn break_round(cur_round: u64, parameters: &Args) {
     wait_with_prog_bar(
         break_mins,
         break_warning_mins,
-        parameters.warn,
+        parameters.no_warn,
         parameters.disable_all_sound,
         "Break in Progress...",
     );
@@ -121,7 +121,7 @@ fn wait_for_user_enter(msg: &str) {
 fn wait_with_prog_bar(
     duration_min: u64,
     warn_mins: u64,
-    warn: bool,
+    no_warn: bool,
     disable_sounds: bool,
     prefix: &str,
 ) {
@@ -130,8 +130,8 @@ fn wait_with_prog_bar(
     pb.set_style(
         ProgressStyle::with_template(
             format!(
-                "{} {{wide_bar:.green/red}} [{{elapsed}}/{}s] ",
-                prefix, duration_sec
+                "{} {{wide_bar:.green/red}} [{{elapsed}}/{}m] ",
+                prefix, duration_min
             )
             .as_str(),
         )
@@ -143,7 +143,7 @@ fn wait_with_prog_bar(
 
         let start_time = SystemTime::now();
 
-        if second / 60 == (duration_min - warn_mins) && warn && !warn_latch && !disable_sounds {
+        if second / 60 == (duration_min - warn_mins) && !no_warn && !warn_latch && !disable_sounds {
             beep_number_in_binary(WARNING_BEEP_NUM, None);
             warn_latch = true;
         }
