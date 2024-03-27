@@ -1,7 +1,7 @@
 use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle}; // Progress Bar
 use rodio::{self, Source};
-use std::{thread, time::Duration, time::SystemTime};
+use std::{io, sync::mpsc, thread, time::Duration, time::SystemTime};
 
 const WARNING_MINS: u64 = 5;
 const DEFAULT_BEEP_MILLIS: u64 = 150;
@@ -45,7 +45,7 @@ fn main() {
     let parameters: Args = Args::parse();
 
     if !parameters.skip_input_break {
-        wait_for_user_enter("Press Enter to Begin");
+        wait_for_user_enter("Press Enter to Begin (Enter to Pause)");
     }
     let mut cur_round: u64 = 1;
     loop {
@@ -57,11 +57,6 @@ fn main() {
 }
 
 fn work_round(cur_round: u64, parameters: &Args) {
-    // println!(
-    //     "Starting round {}. Work for {} minutes!",
-    //     cur_round, parameters.work
-    // );
-
     if !parameters.disable_all_sound {
         beep_number_in_binary(parameters.work, None);
     }
@@ -113,11 +108,18 @@ fn break_round(cur_round: u64, parameters: &Args) {
 }
 
 // Utils
+fn spawn_pause_thread(pause_sender: mpsc::Sender<bool>) {
+    thread::spawn(move || {
+        wait_for_user_enter("");
+        let _ = pause_sender.send(true);
+    });
+}
+
 fn wait_for_user_enter(msg: &str) {
     println!("{}", msg);
 
     let mut input = String::new();
-    std::io::stdin()
+    io::stdin()
         .read_line(&mut input)
         .expect("What? How on earth did you break this?");
 }
@@ -129,18 +131,25 @@ fn wait_with_prog_bar(
     disable_sounds: bool,
     prefix: &str,
 ) {
+    // Create a thread to handle pausing.
+    let (pause_sender, pause_reader) = mpsc::channel();
+    spawn_pause_thread(pause_sender.clone());
+
+    // Make progress bar
     let duration_sec = duration_min * 60;
     let pb: ProgressBar = ProgressBar::new(duration_sec);
     pb.set_style(
         ProgressStyle::with_template(
             format!(
-                "{} {{wide_bar:.green/red}} [{{elapsed}}/{}m] ",
-                prefix, duration_min
+                "{} {{wide_bar:.green/red}} [{{pos}}s/{}s] ",
+                prefix, duration_sec
             )
             .as_str(),
         )
         .unwrap(), // .progress_chars("o|."),
     );
+
+    // Perform wait loop
     let mut warn_latch = false;
     for second in 0..duration_sec {
         pb.inc(1);
@@ -165,6 +174,13 @@ fn wait_with_prog_bar(
                 1000,
             );
         thread::sleep(Duration::from_millis(wait_millis as u64));
+
+        if let Ok(_) = pause_reader.try_recv() {
+            wait_for_user_enter("Paused. Hit enter to resume...");
+            spawn_pause_thread(pause_sender.clone());
+        } else {
+            continue;
+        }
     }
     pb.finish();
 
